@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Wadhifati</title>
+    <link rel="stylesheet" href="../CSS/about.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+</head>
+<body>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD25zgn8lFvVvUUM_Cd2RczXrF4RAQFAWU",
+            authDomain: "wadhifati-db.firebaseapp.com",
+            projectId: "wadhifati-db",
+            storageBucket: "wadhifati-db.appspot.com",
+            messagingSenderId: "119571517839",
+            appId: "1:119571517839:web:afed1a123bed072b76fbfa"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        firebase.auth().onAuthStateChanged((user) => {
+            const navLinks = document.querySelector('.nav-links');
+            if (user) {
+                navLinks.innerHTML = `
+                    <a href="/dashboard" class="nav-link">Dashboard</a>
+                    <a href="#" class="nav-link" id="logout">Logout</a>
+                `;
+                const logoutButton = document.getElementById('logout');
+                logoutButton.addEventListener('click', () => {
+                    firebase.auth().signOut()
+                        .then(() => {
+                            window.location.href = "/login";
+                        })
+                        .catch((error) => {
+                            console.error("Error logging out:", error);
+                        });
+                });
+            } else {
+                navLinks.innerHTML = `
+                    <a href="/" class="nav-link">Join Us</a>
+                `;
+            }
+        });
+    </script>
+
+    <div class="navbar">
+        <a href="/index" class="brand-link">
+            <img src="../images/wadhifati_logo.png" alt="Wadhifati Logo">
+        </a>
+        <div class="nav-links">
+            
+        </div>
+    </div>
+
+    <div class="about-us">
+        <h1>About Us</h1>
+        <p>
+            Welcome to Wadhifati, Oman’s innovative job-searching web application designed to empower job seekers. Inspired by Oman’s 2040 Vision of fostering a skilled, efficient, and innovative 
+            workforce, Wadhifati addresses the critical challenges of job searching in an increasingly dynamic labor market.
+        </p>
+        <h2>Our Mission</h2>
+        <p>
+            At Wadhifati, we strive to simplify the job search process for Oman’s growing population. Our platform 
+            combines technologies like web scraping and machine learning to provide a personalized experience for 
+            job seekers, bridging the gap between talented individuals and opportunities.
+        </p>
+        <h2>The Challenge We Address</h2>
+        <ul>
+            <li>Overwhelming numbers of job listings across various websites.</li>
+            <li>Difficulty in finding positions that match user preferences.</li>
+            <li>Missed opportunities due to fragmented platforms.</li>
+            <li>Time-consuming searches for tailored roles.</li>
+        </ul>
+        <h2>How Wadhifati Helps</h2>
+        <ul>
+            <li><strong>Web Scraping:</strong> Aggregates job postings from multiple platforms into one centralized location.</li>
+            <li><strong>Machine Learning:</strong> Delivers personalized job recommendations and alerts based on user preferences.</li>
+            <li><strong>User-Friendly Interface:</strong> Simplifies navigation, making job searching efficient.</li>
+        </ul>
+        <p>
+            Whether you’re a job seeker looking for your dream role or an employer seeking exceptional talent, 
+            Wadhifati is here to make the connection. Together, we can build a thriving future for Oman’s workforce.
+        </p>
+    </div>
+</body>
+</html>

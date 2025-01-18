@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preferences - Wadhifati</title>
+    <link rel="stylesheet" href="../CSS/preferences.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+</head>
+<body>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD25zgn8lFvVvUUM_Cd2RczXrF4RAQFAWU",
+            authDomain: "wadhifati-db.firebaseapp.com",
+            projectId: "wadhifati-db",
+            storageBucket: "wadhifati-db.appspot.com",
+            messagingSenderId: "119571517839",
+            appId: "1:119571517839:web:afed1a123bed072b76fbfa"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.firestore();
+    </script>
+
+    <div class="navbar">
+        <div class="nav-left">
+            <a href="#" class="brand-link">
+                <img src="../images/wadhifati_logo.png" alt="Wadhifati Logo">
+            </a>
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <a href="/recommendations" class="nav-link">Recommendations</a>
+        </div>
+        <div class="nav-right">
+            <a href="/about" class="nav-link">About Us</a>
+            <a href="/login" class="nav-link">Logout</a>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <button class="button" id="user-info">User Info</button>
+        <button class="button active" id="configure-recommendation">Build Recommendations</button>
+    </div>
+
+    <div class="form-container" id="cv-form-container" style="display: block;">
+        <p class="form-message">Enter keywords or phrases separated by commas related to your skills and qualifications to tailor your recommendations.</p>
+        <form id="keywords-form" autocomplete="off">
+            <div class="form-group">
+                <label for="user_keywords">Keywords/Phrases</label>
+                <input
+                    type="text"
+                    id="user_keywords"
+                    name="user_keywords"
+                    placeholder="e.g., project management, marketing, computer science, Python, Jupyter Notebook"
+                    autocomplete="off"
+                >
+            </div>
+            <div id="error-message" class="error-message"></div>
+            <div class="form-group">
+                <button type="submit">Save</button>
+            </div>
+            <div id="progress-container" style="display: none; text-align: center; margin-top: 20px;">
+                <p>Building Recommendations...</p>
+                <div style="width: 100%; background-color: #ccc; border-radius: 5px;">
+                    <div id="progress-bar" style="width: 0%; height: 20px; background-color: #76c7c0; border-radius: 5px;"></div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="form-container" id="user-info-container" style="display: none;">
+        <form id="user-info-form">
+            <div class="form-group">
+                <label for="email">Current Email</label>
+                <input type="email" id="email" name="current_email" autocomplete="email" disabled>
+            </div>
+            <div class="form-group">
+                <button type="button" id="reset-password">Change Password</button>
+            </div>
+            <div class="form-group">
+                <button type="button" id="change-email">Change Email</button>
+            </div>
+            <div class="form-group">
+                <button type="button" class="delete-button" id="delete-account">Delete Account</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const userInfoButton = document.getElementById('user-info');
+        const configureRecommendationButton = document.getElementById('configure-recommendation');
+        const cvFormContainer = document.getElementById('cv-form-container');
+        const userInfoContainer = document.getElementById('user-info-container');
+
+        userInfoButton.addEventListener('click', () => {
+            cvFormContainer.style.display = 'none';
+            userInfoContainer.style.display = 'block';
+            userInfoButton.classList.add('active');
+            configureRecommendationButton.classList.remove('active');
+        });
+
+        configureRecommendationButton.addEventListener('click', () => {
+            userInfoContainer.style.display = 'none';
+            cvFormContainer.style.display = 'block';
+            configureRecommendationButton.classList.add('active');
+            userInfoButton.classList.remove('active');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            firebase.auth().onAuthStateChanged(async (user) => {
+                if (user) {
+                    document.getElementById("email").value = user.email;
+
+                    try {
+                        const userDoc = await db.collection("users").doc(user.uid).get();
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            const savedKeywords = userData?.preferences?.keywords || [];
+                            document.getElementById('user_keywords').value = savedKeywords.join(', ');
+                        }
+                    } catch (error) {
+                        console.error("Error fetching user preferences:", error);
+                    }
+                } else {
+                    alert("You need to be logged in to access this page.");
+                    window.location.href = "/login";
+                }
+            });
+        });
+
+        document.getElementById('keywords-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const user = firebase.auth().currentUser;
+            const keywordsInput = document.getElementById("user_keywords");
+            const errorMessage = document.getElementById("error-message");
+            const progressContainer = document.getElementById("progress-container");
+            const progressBar = document.getElementById("progress-bar");
+
+            if (!user) {
+                alert("You need to log in to save keywords.");
+                return;
+            }
+
+            const keywords = keywordsInput.value.trim();
+            if (!keywords) {
+                errorMessage.textContent = "Please enter some keywords or phrases.";
+                return;
+            }
+
+            const keywordsArray = keywords.split(',').map(k => k.trim()).filter(k => k);
+            if (keywordsArray.length === 0) {
+                errorMessage.textContent = "Please enter valid keywords.";
+                return;
+            }
+
+            try {
+                errorMessage.textContent = "";
+                progressContainer.style.display = "block";
+                progressBar.style.width = "0%";
+
+                await db.collection("users").doc(user.uid).set(
+                    {
+                        preferences: {
+                            keywords: keywordsArray,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        },
+                    },
+                    { merge: true }
+                );
+
+                progressBar.style.width = "100%";
+                setTimeout(() => {
+                    progressContainer.style.display = "none";
+                    progressBar.style.width = "0%";
+                    alert("Keywords saved successfully!");
+                }, 1000);
+            } catch (error) {
+                console.error("Error saving keywords:", error);
+                errorMessage.textContent = "An error occurred while saving keywords. Please try again.";
+            }
+        });
+    </script>
+</body>
+</html>

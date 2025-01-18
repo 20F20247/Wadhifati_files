@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Recommendations - Wadhifati</title>
+    <link rel="stylesheet" href="../CSS/rec.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+</head>
+<body>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD25zgn8lFvVvUUM_Cd2RczXrF4RAQFAWU",
+            authDomain: "wadhifati-db.firebaseapp.com",
+            projectId: "wadhifati-db",
+            storageBucket: "wadhifati-db.firebasestorage.app",
+            messagingSenderId: "119571517839",
+            appId: "1:119571517839:web:afed1a123bed072b76fbfa"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+    </script>
+
+    <div class="navbar">
+        <div class="navbar-left">
+            <div class="brand-link">
+                <img src="../images/wadhifati_logo.png" alt="Wadhifati Logo">
+            </div>
+            <div class="nav-links-left">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/profile" class="nav-link">Profile</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <a href="/about" class="nav-link">About Us</a>
+            <a href="/login" class="nav-link">Logout</a>
+        </div>
+    </div>
+
+    <section class="recommendations-header">
+        Your Job Recommendations
+    </section>
+
+    <section class="job-listings">
+        <div class="job-listings-container" id="job-recommendations-container">
+            <p id="no-recommendations" style="text-align: center; color: #333; font-size: 18px;">
+                Loading your recommendations...
+            </p>
+        </div>
+    </section>
+
+    <script>
+        const auth = firebase.auth();
+
+        async function loadRecommendations() {
+            const container = document.getElementById("job-recommendations-container");
+            const noRecommendations = document.getElementById("no-recommendations");
+
+            auth.onAuthStateChanged(async (user) => {
+                if (!user) {
+                    noRecommendations.innerText = "User not logged in. Please log in to view your recommendations.";
+                    return;
+                }
+
+                const userId = user.uid;
+
+                try {
+                    const response = await fetch(`http://127.0.0.1:5000/recommendations/${userId}`);
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        noRecommendations.innerText = errorData.error || "Failed to load recommendations.";
+                        return;
+                    }
+
+                    const topJobs = await response.json();
+
+                    if (!topJobs || topJobs.length === 0) {
+                        noRecommendations.innerText = "No recommendations available. Please visit the Profile page to build your preferences.";
+                        return;
+                    }
+
+                    noRecommendations.style.display = "none";
+                    container.innerHTML = ""; 
+                    topJobs.forEach(job => {
+                        const jobCard = document.createElement("div");
+                        jobCard.className = "job-card";
+
+                        jobCard.innerHTML = `
+                            <div class="job-header">
+                                <h2>${job.title}</h2>
+                            </div>
+                            <p class="job-company">${job.company || "Unknown Company"}</p>
+                            <p class="job-source">Source: ${job.source || "N/A"}</p>
+                            <div class="job-footer">
+                                <button onclick="redirectToJob('${job.url || ""}')" class="apply-button">View Job</button>
+                            </div>
+                        `;
+                        container.appendChild(jobCard);
+                    });
+                } catch (error) {
+                    console.error("Error fetching recommendations:", error);
+                    noRecommendations.innerText = "Failed to load recommendations. Please try again later.";
+                }
+            });
+        }
+
+        function redirectToJob(url) {
+            if (url && url.startsWith("http")) {
+                window.open(url, "_blank");
+            } else {
+                alert("Invalid or unavailable job link.");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadRecommendations);
+    </script>
+</body>
+</html>

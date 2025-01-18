@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Wadhifati helps you find job opportunities from leading job portals in Oman.">
+    <meta name="keywords" content="Wadhifati, jobs, Oman, job portal, career">
+    <meta name="author" content="Wadhifati Team">
+    <title>Wadhifati</title>
+    <link rel="stylesheet" href="../CSS/home.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+</head>
+<body>
+    
+    <div class="navbar">
+        <a href="#" class="brand-link">
+            <img src="../images/wadhifati_logo.png" alt="Wadhifati Logo" class="brand-logo">
+        </a>
+        <div class="nav-links">
+            <a href="/about" class="nav-link">About Us</a>
+        </div>
+    </div>
+
+    
+    <div class="hero">
+        <h1>WELCOME TO WADHIFATI</h1>
+        <div class="hero-buttons">
+            <a href="#what-is-wadhifati" class="btn" aria-label="Learn more about Wadhifati">LEARN MORE</a>
+            <a href="#sign-up-section" class="btn" aria-label="Get started with Wadhifati">GET STARTED</a>
+        </div>
+    </div>
+
+    
+    <div id="what-is-wadhifati" class="what-is-wadhifati">
+        <div class="container feature-row">
+            <div class="feature-container">
+                <img src="../images/1.png" alt="Illustration of manual job searching" class="img-fluid">
+                <p>Manually searching for jobs on different websites leads to missed opportunities and time consumption.</p>
+            </div>
+            <div class="feature-container">
+                <img src="../images/2.png" alt="Illustration of overwhelming job postings" class="img-fluid">
+                <p>The sheer volume of job postings on various sites can be overwhelming, making it difficult to focus.</p>
+            </div>
+            <div class="feature-container">
+                <img src="../images/3.png" alt="Illustration of job opportunities in Oman" class="img-fluid">
+                <p>Wadhifati brings together job opportunities from leading job portals in Oman.</p>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="sign-up-section" class="sign-up-section">
+        <h2>START YOUR JOURNEY WITH WADHIFATI TODAY</h2>
+        <div class="sign-up-form">
+            <form id="signupForm">
+                <input type="email" id="email" placeholder="Enter your email" required>
+                <input type="password" id="password" placeholder="Create a password" required>
+                <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                <button type="submit" aria-label="Sign up for Wadhifati">Sign Up</button>
+            </form>
+            <p>Already Have an Account? <a href="/login">Log in</a></p>
+        </div>
+    </div>
+
+    <script>
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyD25zgn8lFvVvUUM_Cd2RczXrF4RAQFAWU",
+            authDomain: "wadhifati-db.firebaseapp.com",
+            projectId: "wadhifati-db",
+            storageBucket: "wadhifati-db.firebasestorage.app",
+            messagingSenderId: "119571517839",
+            appId: "1:119571517839:web:afed1a123bed072b76fbfa"
+        };
+
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        
+        document.getElementById('signupForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    
+                    alert("Registration successful!");
+                    window.location.href = "/login"; 
+                })
+                .catch((error) => {
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    alert(`Error: ${errorMessage}`);
+                });
+        });
+    </script>
+</body>
+</html>

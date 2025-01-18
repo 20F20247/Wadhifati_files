@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Wadhifati</title>
+    <link rel="stylesheet" href="../CSS/login.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="#" class="brand-link">
+            <img src="../images/wadhifati_logo.png" alt="Wadhifati Logo" class="brand-logo">
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/about" class="nav-link">About Us</a>
+        </div>
+    </div>
+
+    <div id="login-section" class="sign-up-section">
+        <div class="welcome-back">ADMIN LOGIN</div>
+        <div class="sign-up-form">
+            <form id="admin-login-form">
+                <input type="email" id="admin-login-email" placeholder="Admin Email Address" required>
+                <input type="password" id="admin-login-password" placeholder="Password" required>
+                <button type="submit">Log In</button>
+                <div class="login-links">
+                    <a href="/login" id="not-an-admin">Not an Admin?</a>
+                </div>
+            </form>
+            <p id="admin-login-message" style="color: red; display: none;"></p>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD25zgn8lFvVvUUM_Cd2RczXrF4RAQFAWU",
+            authDomain: "wadhifati-db.firebaseapp.com",
+            projectId: "wadhifati-db",
+            storageBucket: "wadhifati-db.firebaseapp.com",
+            messagingSenderId: "119571517839",
+            appId: "1:119571517839:web:afed1a123bed072b76fbfa",
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('admin-login-email').value;
+            const password = document.getElementById('admin-login-password').value;
+            const message = document.getElementById('admin-login-message');
+            message.style.display = 'none';
+
+            try {
+            
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                
+                await user.getIdToken(true); 
+                const idTokenResult = await user.getIdTokenResult();
+                console.log("User Claims:", idTokenResult.claims);
+
+                if (idTokenResult.claims.admin) {
+                    message.style.color = 'green';
+                    message.textContent = 'Admin login successful! Redirecting...';
+                    message.style.display = 'block';
+                    setTimeout(() => window.location.href = '/admin', 3000); 
+                } else {
+                    message.style.color = 'red';
+                    message.textContent = 'You are not an admin.';
+                    message.style.display = 'block';
+                }
+            } catch (error) {
+                console.error("Login Error:", error.message || error);
+                message.style.color = 'red';
+                message.textContent = 'Invalid credentials. Please try again.';
+                message.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

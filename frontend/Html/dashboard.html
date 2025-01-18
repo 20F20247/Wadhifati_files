@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Dashboard - Wadhifati</title>
+    <link rel="stylesheet" href="../CSS/dashboard.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+</head>
+<body>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD25zgn8lFvVvUUM_Cd2RczXrF4RAQFAWU",
+            authDomain: "wadhifati-db.firebaseapp.com",
+            projectId: "wadhifati-db",
+            storageBucket: "wadhifati-db.appspot.com",
+            messagingSenderId: "119571517839",
+            appId: "1:119571517839:web:afed1a123bed072b76fbfa"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "/login";
+            }
+        });
+    </script>
+
+    <div class="navbar">
+        <div class="navbar-left">
+            <div class="brand-link">
+                <img src="../images/wadhifati_logo.png" alt="Wadhifati Logo">
+            </div>
+            <div class="nav-links-left">
+                <a href="/recommendations" class="nav-link">Recommendations</a>
+                <a href="/profile" class="nav-link">Profile</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <div class="nav-links-right">
+                <a href="/about" class="nav-link">About Us</a>
+                <a href="/login" class="nav-link">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="search-bar">
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search jobs, company" class="search-input">
+            <select id="location-dropdown" class="location-dropdown">
+                <option value="">All Locations</option>
+                <option value="Muscat">Muscat</option>
+                <option value="Sohar">Sohar</option>
+                <option value="Salalah">Salalah</option>
+            </select>
+            <button class="search-button" onclick="filterJobs()">Search</button>
+        </div>
+    </section>
+
+    <section class="job-listings">
+        <div class="job-listings-container" id="job-listings-container"></div>
+    </section>
+
+    <div class="pagination" id="pagination">
+        <button id="prevPage" onclick="changePage('prev')" disabled>Previous</button>
+        <button id="nextPage" onclick="changePage('next')">Next</button>
+    </div>
+
+    <script>
+        const db = firebase.firestore();
+        let currentPage = 1;
+        const jobsPerPage = 9;
+        let lastVisible = null;
+
+        async function loadJobs(filter = {}) {
+            const jobsContainer = document.getElementById("job-listings-container");
+
+            try {
+                let query = db.collection("jobs").limit(jobsPerPage);
+                if (filter.location) {
+                    query = query.where("location", "==", filter.location);
+                }
+                if (currentPage > 1 && lastVisible) {
+                    query = query.startAfter(lastVisible);
+                }
+                const querySnapshot = await query.get();
+                jobsContainer.innerHTML = "";
+                if (querySnapshot.empty) {
+                    jobsContainer.innerHTML = "<p>No jobs available for the selected criteria.</p>";
+                    return;
+                }
+                querySnapshot.forEach((doc) => {
+                    const job = doc.data();
+                    const jobCard = document.createElement("div");
+                    jobCard.className = "job-card";
+                    jobCard.innerHTML = `
+                        <div class="job-header">
+                            <h2>${job.title}</h2>
+                        </div>
+                        <p class="job-company">${job.company}</p>
+                        <div class="job-footer">
+                            <button onclick="redirectToJob('${job.job_link || ""}')" class="apply-button">View Job</button>
+                        </div>
+                        <p class="job-source">Source: ${job.source || "N/A"}</p>
+                    `;
+                    jobsContainer.appendChild(jobCard);
+                });
+                lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+            } catch (error) {
+                jobsContainer.innerHTML = "<p>Failed to load jobs. Please try again later.</p>";
+            }
+        }
+
+        function redirectToJob(url) {
+            if (url && url.startsWith("http")) {
+                window.open(url, "_blank");
+            } else {
+                alert("Invalid or unavailable job link.");
+            }
+        }
+
+        function changePage(direction) {
+            if (direction === "prev" && currentPage > 1) {
+                currentPage--;
+            } else if (direction === "next") {
+                currentPage++;
+            }
+            loadJobs({});
+        }
+
+        document.addEventListener("DOMContentLoaded", () => loadJobs({}));
+
+        function filterJobs() {
+            const location = document.getElementById("location-dropdown").value;
+            loadJobs({ location });
+        }
+    </script>
+</body>
+</html>

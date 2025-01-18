@@ -1,0 +1,127 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #FF725E;
+    color: #333;
+    line-height: 1.6;
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    height: 60px;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-links-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.brand-link img {
+    height: 40px;
+    width: auto;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-link {
+    color: #ff6f61;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.nav-link:hover {
+    text-decoration: underline;
+}
+
+
+.recommendations-header {
+    margin-top: 60px;
+    padding: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #ff6f61;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.job-listings {
+    padding: 20px;
+}
+
+.job-listings-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+}
+
+.job-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    min-height: 180px;
+}
+
+.job-header h2 {
+    font-size: 20px;
+    color: #ff6f61;
+    margin-bottom: 10px;
+}
+
+.job-company, .job-source {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: auto;
+}
+
+.job-footer {
+    align-self: flex-end;
+    margin-top: 10px;
+}
+
+.apply-button {
+    padding: 8px 16px;
+    background-color: #ff6f61;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.apply-button:hover {
+    background-color: #e55a50;
+}

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Wadhifati</title>
+    <link rel="stylesheet" href="../CSS/admin.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+</head>
+<body>
+    
+    <div class="navbar">
+        <a href="/index" class="brand-link">
+            <img src="../images/wadhifati_logo.png" alt="Wadhifati Logo">
+        </a>
+        <div class="nav-links">
+            <a href="/adminlogin" class="nav-link">Log Out</a>
+        </div>
+    </div>
+
+    
+    <section class="admin-panel">
+        <h1>Welcome to the Admin Panel</h1>
+
+        
+        <div id="admin-actions">
+            <button onclick="showJobs()">View All Jobs</button>
+        </div>
+
+        
+        <div id="jobs-table-container" class="table-container" style="display: none;">
+            <h2>Job Listings</h2>
+            <div style="text-align: right; margin-bottom: 10px;">
+                <button id="save-jobs-button" onclick="saveJobChanges()">Save Changes</button>
+            </div>
+            <table id="jobs-table" border="1" style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Source</th>
+                        <th>Job URL</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+
+    <script>
+        const firebaseConfig = {
+  apiKey: "AIzaSyD25zgn8lFvVvUUM_Cd2RczXrF4RAQFAWU",
+  authDomain: "wadhifati-db.firebaseapp.com",
+  databaseURL: "https://wadhifati-db-default-rtdb.firebaseio.com",
+  projectId: "wadhifati-db",
+  storageBucket: "wadhifati-db.firebasestorage.app",
+  messagingSenderId: "119571517839",
+  appId: "1:119571517839:web:afed1a123bed072b76fbfa",
+  measurementId: "G-26JCQCT4KR"
+};
+
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        let jobChanges = {}; 
+
+        
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const idTokenResult = await user.getIdTokenResult();
+                if (!idTokenResult.claims.admin) {
+                    alert("You are not authorized to access this page.");
+                    window.location.href = "/dashboard";
+                }
+            } else {
+                alert("You must log in to access this page.");
+                window.location.href = "/login";
+            }
+        });
+
+        
+        async function showJobs() {
+            document.getElementById("jobs-table-container").style.display = "block";
+
+            const tableBody = document.getElementById("jobs-table").querySelector("tbody");
+            tableBody.innerHTML = ""; 
+            jobChanges = {}; 
+
+            try {
+                const jobs = await db.collection("jobs").get();
+                jobs.forEach((doc) => {
+                    const job = doc.data();
+                    const row = document.createElement("tr");
+
+                    row.innerHTML = `
+                        <td contenteditable="true" data-field="company" data-id="${doc.id}">${job.company}</td>
+                        <td contenteditable="true" data-field="title" data-id="${doc.id}">${job.title}</td>
+                        <td contenteditable="true" data-field="description" data-id="${doc.id}">${job.description}</td>
+                        <td contenteditable="true" data-field="source" data-id="${doc.id}">${job.source}</td>
+                        <td><a href="${job.url}" target="_blank">View Job</a></td>
+                        <td>
+                            <button onclick="deleteJob('${doc.id}')">Delete</button>
+                        </td>
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+
+                
+                tableBody.querySelectorAll("[contenteditable]").forEach((cell) => {
+                    cell.addEventListener("input", (e) => {
+                        const field = e.target.dataset.field;
+                        const id = e.target.dataset.id;
+                        const value = e.target.textContent;
+
+                        if (!jobChanges[id]) {
+                            jobChanges[id] = {};
+                        }
+                        jobChanges[id][field] = value;
+                    });
+                });
+            } catch (error) {
+                console.error("Error fetching jobs:", error);
+                alert("Failed to fetch jobs. Please try again.");
+            }
+        }
+
+        
+        async function saveJobChanges() {
+            try {
+                const updatePromises = Object.keys(jobChanges).map((id) =>
+                    db.collection("jobs").doc(id).update(jobChanges[id])
+                );
+
+                await Promise.all(updatePromises);
+                alert("All changes saved successfully!");
+                showJobs(); 
+            } catch (error) {
+                console.error("Error saving job changes:", error);
+                alert("Failed to save changes.");
+            }
+        }
+
+        b
+        async function deleteJob(jobId) {
+            if (confirm("Are you sure you want to delete this job?")) {
+                try {
+                    await db.collection("jobs").doc(jobId).delete();
+                    alert("Job deleted successfully!");
+                    showJobs();
+                } catch (error) {
+                    console.error("Error deleting job:", error);
+                    alert("Failed to delete job.");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
