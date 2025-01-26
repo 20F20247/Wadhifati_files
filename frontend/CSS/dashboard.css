@@ -83,15 +83,6 @@ body {
     font-size: 16px;
 }
 
-.location-dropdown {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: white;
-    font-size: 16px;
-}
-
 .search-button {
     flex: 0.5;
     padding: 10px;
@@ -137,7 +128,7 @@ body {
     margin-bottom: 10px;
 }
 
-.job-location, .job-company, .job-description {
+.job-company, .job-description {
     font-size: 14px;
 }
 

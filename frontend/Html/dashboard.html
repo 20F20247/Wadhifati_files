@@ -51,13 +51,7 @@
 
     <section class="search-bar">
         <div class="search-container">
-            <input type="text" id="search-input" placeholder="Search jobs, company" class="search-input">
-            <select id="location-dropdown" class="location-dropdown">
-                <option value="">All Locations</option>
-                <option value="Muscat">Muscat</option>
-                <option value="Sohar">Sohar</option>
-                <option value="Salalah">Salalah</option>
-            </select>
+            <input type="text" id="search-input" placeholder="Search jobs by title or source" class="search-input">
             <button class="search-button" onclick="filterJobs()">Search</button>
         </div>
     </section>
@@ -75,49 +69,77 @@
         const db = firebase.firestore();
         let currentPage = 1;
         const jobsPerPage = 9;
-        let lastVisible = null;
 
-        async function loadJobs(filter = {}) {
+        async function loadJobs(filter = {}, page = 1) {
             const jobsContainer = document.getElementById("job-listings-container");
 
             try {
-                let query = db.collection("jobs").limit(jobsPerPage);
-                if (filter.location) {
-                    query = query.where("location", "==", filter.location);
-                }
-                if (currentPage > 1 && lastVisible) {
-                    query = query.startAfter(lastVisible);
-                }
-                const querySnapshot = await query.get();
+                const querySnapshot = await db.collection("jobs").get();
                 jobsContainer.innerHTML = "";
+
                 if (querySnapshot.empty) {
                     jobsContainer.innerHTML = "<p>No jobs available for the selected criteria.</p>";
                     return;
                 }
+
+               
+                const filteredJobs = [];
                 querySnapshot.forEach((doc) => {
                     const job = doc.data();
+                    const searchQuery = filter.query ? filter.query.toLowerCase() : null;
+
+                    if (
+                        !searchQuery ||
+                        (job.title && job.title.toLowerCase().includes(searchQuery)) ||
+                        (job.source && job.source.toLowerCase().includes(searchQuery))
+                    ) {
+                        filteredJobs.push({ id: doc.id, ...job });
+                    }
+                });
+
+                if (filteredJobs.length === 0) {
+                    jobsContainer.innerHTML = "<p>No jobs match your search criteria.</p>";
+                    return;
+                }
+
+                // Paginate filtered jobs
+                const paginatedJobs = filteredJobs.slice((page - 1) * jobsPerPage, page * jobsPerPage);
+
+                paginatedJobs.forEach((job) => {
                     const jobCard = document.createElement("div");
                     jobCard.className = "job-card";
                     jobCard.innerHTML = `
                         <div class="job-header">
                             <h2>${job.title}</h2>
                         </div>
-                        <p class="job-company">${job.company}</p>
+                        <p class="job-company">Company: ${job.company}</p>
+                        <p class="job-description">${job.description ? job.description.slice(0, 100) + "..." : "No description available."}</p>
                         <div class="job-footer">
-                            <button onclick="redirectToJob('${job.job_link || ""}')" class="apply-button">View Job</button>
+                            <span class="job-source">Source: ${job.source || "N/A"}</span>
+                            <button class="apply-button" onclick="redirectToJob('${job.url || ""}')">View Job</button>
                         </div>
-                        <p class="job-source">Source: ${job.source || "N/A"}</p>
                     `;
                     jobsContainer.appendChild(jobCard);
                 });
-                lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+
+                
+                document.getElementById("prevPage").disabled = page === 1;
+                document.getElementById("nextPage").disabled = page * jobsPerPage >= filteredJobs.length;
+
+                currentPage = page;
             } catch (error) {
+                console.error("Error loading jobs:", error);
                 jobsContainer.innerHTML = "<p>Failed to load jobs. Please try again later.</p>";
             }
         }
 
         function redirectToJob(url) {
-            if (url && url.startsWith("http")) {
+            if (!url) {
+                alert("Invalid or unavailable job link.");
+                return;
+            }
+
+            if (url.startsWith("http")) {
                 window.open(url, "_blank");
             } else {
                 alert("Invalid or unavailable job link.");
@@ -126,19 +148,18 @@
 
         function changePage(direction) {
             if (direction === "prev" && currentPage > 1) {
-                currentPage--;
+                loadJobs({ query: document.getElementById("search-input").value }, currentPage - 1);
             } else if (direction === "next") {
-                currentPage++;
+                loadJobs({ query: document.getElementById("search-input").value }, currentPage + 1);
             }
-            loadJobs({});
+        }
+
+        function filterJobs() {
+            const searchInput = document.getElementById("search-input").value;
+            loadJobs({ query: searchInput });
         }
 
         document.addEventListener("DOMContentLoaded", () => loadJobs({}));
-
-        function filterJobs() {
-            const location = document.getElementById("location-dropdown").value;
-            loadJobs({ location });
-        }
     </script>
 </body>
 </html>

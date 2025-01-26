@@ -4,12 +4,15 @@ from firebase_admin import credentials, firestore
 from sentence_transformers import SentenceTransformer, util
 import threading
 import logging
+from job_scraper import scrape_all_jobs  
+
 
 if not firebase_admin._apps:
     cred = credentials.Certificate("C:\\Users\\Skmal\\Downloads\\wadhifati-db-firebase-adminsdk-15rnt-520ef3807a.json")
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
+
 
 model = SentenceTransformer("C:\\Users\\Skmal\\job_title_model_final")
 
@@ -21,12 +24,10 @@ logging.basicConfig(level=logging.INFO)
 
 
 def fetch_job_listings():
+    """Fetch job listings from Firestore."""
     try:
         job_docs = db.collection("jobs").stream()
-        job_listings = []
-        for job_doc in job_docs:
-            job_data = job_doc.to_dict()
-            job_listings.append(job_data)
+        job_listings = [doc.to_dict() for doc in job_docs]
         logging.info(f"Fetched job listings: {job_listings}")
         return job_listings
     except Exception as e:
@@ -35,6 +36,7 @@ def fetch_job_listings():
 
 
 def rank_job_listings(keywords, job_listings):
+    """Rank job listings based on similarity to keywords."""
     try:
         results = []
         for job in job_listings:
@@ -59,12 +61,10 @@ def rank_job_listings(keywords, job_listings):
         return []
 
 
-
 def process_recommendations(user_id, keywords):
+    """Process recommendations for a user and update Firestore."""
     try:
         logging.info(f"Processing recommendations for user: {user_id} with keywords: {keywords}")
-        
-        
         job_listings = fetch_job_listings()
         logging.info(f"Fetched {len(job_listings)} job listings")
 
@@ -76,16 +76,15 @@ def process_recommendations(user_id, keywords):
         top_jobs = rank_job_listings(keywords, job_listings)
         logging.info(f"Generated recommendations: {top_jobs}")
 
-        
         db.collection("users").document(user_id).update({"top_jobs": top_jobs})
         logging.info(f"Successfully updated Firestore for user {user_id}")
     except Exception as e:
         logging.error(f"Error processing recommendations for user {user_id}: {e}")
 
 
-
 @app.route('/rerun_recommendations/<user_id>', methods=['POST'])
 def rerun_recommendations(user_id):
+    """Endpoint to rerun recommendations for a user."""
     try:
         user_doc = db.collection("users").document(user_id).get()
         if not user_doc.exists:
@@ -106,21 +105,20 @@ def rerun_recommendations(user_id):
         return jsonify({"error": "Internal server error"}), 500
 
 
-@app.route('/CSS/<path:filename>')
-def serve_css(filename):
-    return send_from_directory('../frontend/CSS', filename)
+@app.route('/scrape_jobs', methods=['POST'])
+def scrape_jobs_route():
+    """Endpoint to trigger job scraping."""
+    try:
+        threading.Thread(target=scrape_all_jobs).start()
+        return jsonify({"message": "Job scraping started successfully!"}), 200
+    except Exception as e:
+        logging.error(f"Error during job scraping: {e}")
+        return jsonify({"error": "Job scraping failed!"}), 500
 
-@app.route('/images/<path:filename>')
-def serve_images(filename):
-    return send_from_directory('../frontend/images', filename)
-
-
-@app.route('/')
-def index():
-    return render_template('Home.html')
 
 @app.route('/recommendations/<user_id>', methods=['GET'])
 def recommendations(user_id):
+    """Endpoint to fetch recommendations for a user."""
     try:
         user_doc = db.collection("users").document(user_id).get()
         if not user_doc.exists:
@@ -136,7 +134,19 @@ def recommendations(user_id):
 
 
 
+@app.route('/CSS/<path:filename>')
+def serve_css(filename):
+    return send_from_directory('../frontend/CSS', filename)
 
+@app.route('/images/<path:filename>')
+def serve_images(filename):
+    return send_from_directory('../frontend/images', filename)
+
+
+
+@app.route('/')
+def index():
+    return render_template('Home.html')
 
 @app.route('/dashboard')
 def dashboard():

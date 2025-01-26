@@ -3,7 +3,7 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-// Function to list users
+
 exports.listUsers = functions.https.onCall(async (data, context) => {
     if (!context.auth || !context.auth.token.admin) {
         throw new functions.https.HttpsError(
@@ -37,7 +37,7 @@ exports.listUsers = functions.https.onCall(async (data, context) => {
     return { data: users };
 });
 
-// Function to delete a user
+
 exports.deleteUser = functions.https.onCall(async (data, context) => {
     if (!context.auth || !context.auth.token.admin) {
         throw new functions.https.HttpsError(

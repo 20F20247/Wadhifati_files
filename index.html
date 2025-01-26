@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wadhifati Authentication Test</title>
 
-    <!-- Firebase SDKs loaded via CDN -->
+   
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 </head>
@@ -26,11 +26,11 @@
         <button type="submit">Log In</button>
     </form>
 
-    <!-- Your custom JavaScript code directly in the HTML -->
+    
     <script>
         console.log("Firebase Authentication Script Loaded");
 
-        // Firebase configuration
+        
         const firebaseConfig = {
             apiKey: "AIzaSyD25zgn8lFvVvUUM_Cd2RczXrF4RAQFAWU",
             authDomain: "wadhifati-db.firebaseapp.com",
@@ -40,11 +40,11 @@
             appId: "1:119571517839:web:afed1a123bed072b76fbfa"
         };
 
-        // Initialize Firebase
+        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
-        // Sign up function
+       
         document.getElementById('signup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             console.log("Sign-up form submitted");
@@ -58,7 +58,7 @@
             }
         });
 
-        // Log in function
+        
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             console.log("Login form submitted");

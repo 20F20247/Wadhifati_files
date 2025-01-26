@@ -94,7 +94,8 @@
                             <div class="job-header">
                                 <h2>${job.title}</h2>
                             </div>
-                            <p class="job-company">${job.company || "Unknown Company"}</p>
+                            <p class="job-company">Company: ${job.company || "Unknown Company"}</p>
+                            <p class="job-description">${job.description ? job.description.slice(0, 100) + "..." : "No description available."}</p>
                             <p class="job-source">Source: ${job.source || "N/A"}</p>
                             <div class="job-footer">
                                 <button onclick="redirectToJob('${job.url || ""}')" class="apply-button">View Job</button>
